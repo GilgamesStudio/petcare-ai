@@ -93,9 +93,23 @@ function HealthCheckContent() {
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setCapturedImage(reader.result as string)
-    reader.readAsDataURL(file)
+    // 이미지를 최대 800px로 리사이즈하여 압축 (Vercel 요청 크기 제한 대응)
+    const img = new Image()
+    img.onload = () => {
+      const maxSize = 800
+      let w = img.width
+      let h = img.height
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize }
+        else { w = Math.round(w * maxSize / h); h = maxSize }
+      }
+      const canvas = document.createElement("canvas")
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext("2d")?.drawImage(img, 0, 0, w, h)
+      setCapturedImage(canvas.toDataURL("image/jpeg", 0.7))
+    }
+    img.src = URL.createObjectURL(file)
   }
 
   async function analyzeImage() {
@@ -115,6 +129,9 @@ function HealthCheckContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ checkType: selectedType, imageData: capturedImage }),
       })
+      if (!res.ok) {
+        throw new Error(`서버 오류 (${res.status})`)
+      }
       const result = await res.json()
 
       // 결과 저장 (반려동물이 선택된 경우만)
