@@ -61,15 +61,19 @@ function HealthCheckContent() {
 
   async function startCamera() {
     try {
+      setShowCamera(true)
+      // 약간의 딜레이를 줘서 video 엘리먼트가 렌더링된 후 srcObject 설정
+      await new Promise((r) => setTimeout(r, 100))
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: 640, height: 480 },
+        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } },
       })
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        await videoRef.current.play()
       }
-      setShowCamera(true)
     } catch {
+      setShowCamera(false)
       alert("카메라에 접근할 수 없습니다. 권한을 확인해주세요.")
     }
   }
@@ -95,8 +99,12 @@ function HealthCheckContent() {
   }
 
   async function analyzeImage() {
-    if (!selectedType || !selectedPetId) {
-      alert("반려동물과 검사 항목을 선택해주세요")
+    if (!selectedType) {
+      alert("검사 항목을 선택해주세요")
+      return
+    }
+    if (!selectedPetId && pets.length > 0) {
+      alert("반려동물을 선택해주세요")
       return
     }
     setAnalyzing(true)
@@ -109,19 +117,21 @@ function HealthCheckContent() {
       })
       const result = await res.json()
 
-      // 결과 저장
-      await fetch("/api/health-checks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pet_id: selectedPetId,
-          check_type: selectedType,
-          score: result.score,
-          status: result.status,
-          symptoms: result.symptoms,
-          advice: result.advice,
-        }),
-      })
+      // 결과 저장 (반려동물이 선택된 경우만)
+      if (selectedPetId) {
+        await fetch("/api/health-checks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pet_id: selectedPetId,
+            check_type: selectedType,
+            score: result.score,
+            status: result.status,
+            symptoms: result.symptoms,
+            advice: result.advice,
+          }),
+        })
+      }
 
       // 결과 페이지로 이동
       const params = new URLSearchParams({
@@ -228,13 +238,11 @@ function HealthCheckContent() {
             </div>
           ) : (
             <div className="flex gap-3">
-              <button
-                onClick={startCamera}
-                className="flex-1 flex flex-col items-center gap-2 bg-white border-2 border-dashed border-gray-200 rounded-xl p-6 hover:border-emerald-300 transition-colors"
-              >
+              <label className="flex-1 flex flex-col items-center gap-2 bg-white border-2 border-dashed border-gray-200 rounded-xl p-6 hover:border-emerald-300 transition-colors cursor-pointer">
                 <Camera className="w-8 h-8 text-gray-400" />
                 <span className="text-sm text-gray-500">카메라 촬영</span>
-              </button>
+                <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
+              </label>
               <label className="flex-1 flex flex-col items-center gap-2 bg-white border-2 border-dashed border-gray-200 rounded-xl p-6 hover:border-emerald-300 transition-colors cursor-pointer">
                 <Upload className="w-8 h-8 text-gray-400" />
                 <span className="text-sm text-gray-500">사진 업로드</span>
@@ -247,7 +255,7 @@ function HealthCheckContent() {
         {/* Analyze Button */}
         <button
           onClick={analyzeImage}
-          disabled={!capturedImage || !selectedType || !selectedPetId || analyzing}
+          disabled={!capturedImage || !selectedType || analyzing}
           className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {analyzing ? (
