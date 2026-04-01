@@ -90,7 +90,7 @@ JSON 형식:
     return NextResponse.json(simulateFallback(checkType))
   } catch (error) {
     console.error("Gemini API error:", error)
-    return NextResponse.json(simulateFallback(checkType || "EYES"))
+    return NextResponse.json(simulateFallback("EYES"))
   }
 }
 
