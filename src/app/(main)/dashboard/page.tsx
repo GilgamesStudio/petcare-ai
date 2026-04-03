@@ -6,7 +6,7 @@ import { Header } from "@/components/layout/header"
 import Link from "next/link"
 import {
   Eye, Brush, SmilePlus, Ear, Footprints, Activity,
-  Plus, ChevronRight, Heart
+  Plus, ChevronRight, Heart, MessageCircle, BookOpen, Users, AlertCircle
 } from "lucide-react"
 
 interface Pet {
@@ -58,6 +58,39 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* AI Chatbot Banner */}
+        <Link
+          href="/chat"
+          className="flex items-center gap-4 bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow border border-emerald-100"
+        >
+          <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+            <MessageCircle className="w-6 h-6 text-emerald-600" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-gray-900">AI 수의사 상담</p>
+            <p className="text-xs text-gray-500 mt-0.5">증상을 말하면 AI가 원인과 대처법을 알려드려요</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-300" />
+        </Link>
+
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link href="/breed-guide" className="flex items-center gap-3 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-2 bg-purple-50 rounded-lg"><BookOpen className="w-5 h-5 text-purple-500" /></div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">품종 가이드</p>
+              <p className="text-[10px] text-gray-400">맞춤 건강 정보</p>
+            </div>
+          </Link>
+          <Link href="/community" className="flex items-center gap-3 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-2 bg-blue-50 rounded-lg"><Users className="w-5 h-5 text-blue-500" /></div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">커뮤니티</p>
+              <p className="text-[10px] text-gray-400">보호자 소통</p>
+            </div>
+          </Link>
+        </div>
+
         {/* Quick Check Buttons */}
         <div>
           <h3 className="text-base font-bold text-gray-900 mb-3">빠른 건강 체크</h3>
@@ -83,6 +116,58 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+
+        {/* Multi-Pet Family Health Overview (2+ pets) */}
+        {!loading && pets.length >= 2 && pets.some((p) => p.health_checks.length > 0) && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="text-base font-bold text-gray-900 mb-3">가족 건강 한눈에 보기</h3>
+            <div className="space-y-3">
+              {pets.map((pet) => {
+                const checks = pet.health_checks || []
+                const avgScore = checks.length > 0
+                  ? Math.round(checks.reduce((s, h) => s + h.score, 0) / checks.length)
+                  : null
+                const hasWarning = checks.some((h) => h.status === "WARNING")
+                const hasCaution = checks.some((h) => h.status === "CAUTION")
+                return (
+                  <Link key={pet.id} href={`/my-pets/${pet.id}`} className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-lg shrink-0">
+                      {pet.species === "DOG" ? "🐶" : "🐱"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{pet.name}</p>
+                      {avgScore !== null ? (
+                        <div className="mt-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              avgScore >= 80 ? "bg-emerald-500" : avgScore >= 60 ? "bg-amber-500" : "bg-red-500"
+                            }`}
+                            style={{ width: `${avgScore}%` }}
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-gray-400 mt-0.5">아직 검사 기록 없음</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {avgScore !== null && (
+                        <span className="text-sm font-bold text-gray-700">{avgScore}</span>
+                      )}
+                      {hasWarning && <AlertCircle className="w-4 h-4 text-red-500" />}
+                      {!hasWarning && hasCaution && <AlertCircle className="w-4 h-4 text-amber-500" />}
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+            {pets.some((p) => p.health_checks.some((h) => h.status === "WARNING")) && (
+              <div className="mt-3 px-3 py-2 bg-red-50 rounded-lg text-xs text-red-600 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                주의가 필요한 반려동물이 있어요. 건강체크를 확인해주세요.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* My Pets */}
         <div>

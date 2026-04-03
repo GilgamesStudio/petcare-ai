@@ -3,8 +3,11 @@
 import { useEffect, useState, use } from "react"
 import { Header } from "@/components/layout/header"
 import Link from "next/link"
-import { Camera, Calendar, TrendingUp, Trash2 } from "lucide-react"
+import { Camera, Calendar, TrendingUp, Trash2, MessageCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
+} from "recharts"
 
 interface HealthCheck {
   id: string
@@ -141,6 +144,95 @@ export default function PetDetailPage({ params }: { params: Promise<{ id: string
             <Calendar className="w-4 h-4" /> 케어 플랜
           </Link>
         </div>
+
+        {/* Health Trend Chart */}
+        {pet.health_checks.length >= 2 && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              건강 점수 추이
+            </h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart
+                data={[...pet.health_checks].reverse().map((h) => ({
+                  date: new Date(h.created_at).toLocaleDateString("ko", { month: "short", day: "numeric" }),
+                  score: h.score,
+                  type: CHECK_LABELS[h.check_type],
+                }))}
+              >
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, fontSize: 13 }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(value: any, _name: any, props: any) => [`${value}점`, props.payload.type]}
+                />
+                <Area type="monotone" dataKey="score" stroke="#10b981" strokeWidth={2} fill="url(#scoreGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Body Part Scores */}
+        {pet.health_checks.length > 0 && (() => {
+          const latestByType: Record<string, HealthCheck> = {}
+          for (const h of pet.health_checks) {
+            if (!latestByType[h.check_type]) latestByType[h.check_type] = h
+          }
+          const entries = Object.entries(latestByType)
+          if (entries.length < 2) return null
+          return (
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <h3 className="text-base font-bold text-gray-900 mb-4">부위별 건강 점수</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {entries.map(([type, check]) => (
+                  <div key={type} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                    <div className="relative w-10 h-10">
+                      <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                        <circle
+                          cx="18" cy="18" r="15" fill="none"
+                          stroke={check.score >= 80 ? "#10b981" : check.score >= 60 ? "#f59e0b" : "#ef4444"}
+                          strokeWidth="3"
+                          strokeDasharray={`${check.score * 0.942} 94.2`}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-700">
+                        {check.score}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{CHECK_LABELS[type]}</p>
+                      <p className="text-[10px] text-gray-400">
+                        {new Date(check.created_at).toLocaleDateString("ko")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* AI Consultation */}
+        <Link
+          href="/chat"
+          className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4"
+        >
+          <MessageCircle className="w-5 h-5 text-emerald-600" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-emerald-800">{pet.name} 건강 상담하기</p>
+            <p className="text-xs text-emerald-600">AI 수의사에게 궁금한 점을 물어보세요</p>
+          </div>
+        </Link>
 
         {/* Health History */}
         <div>
