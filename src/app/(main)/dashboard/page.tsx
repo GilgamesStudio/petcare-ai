@@ -7,7 +7,7 @@ import Link from "next/link"
 import {
   Eye, Brush, SmilePlus, Ear, Footprints, Activity,
   Plus, ChevronRight, Heart, MessageCircle, BookOpen, Users, AlertCircle,
-  Hospital, UtensilsCrossed, ShieldAlert
+  Hospital, UtensilsCrossed, ShieldAlert, Shield, Crown
 } from "lucide-react"
 
 interface Pet {
@@ -68,6 +68,8 @@ export default function DashboardPage() {
             { href: "/nutrition", icon: UtensilsCrossed, label: "영양 분석", color: "bg-orange-50 text-orange-500" },
             { href: "/emergency", icon: ShieldAlert, label: "응급 가이드", color: "bg-red-50 text-red-500" },
             { href: "/chat", icon: MessageCircle, label: "AI 상담", color: "bg-emerald-50 text-emerald-500" },
+            { href: "/insurance", icon: Shield, label: "펫 보험", color: "bg-indigo-50 text-indigo-500" },
+            { href: "/premium", icon: Crown, label: "프리미엄", color: "bg-amber-50 text-amber-500" },
           ].map(item => (
             <Link key={item.href} href={item.href} className="flex flex-col items-center gap-1.5 bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
               <div className={`p-2 rounded-lg ${item.color}`}><item.icon className="w-4 h-4" /></div>
