@@ -6,7 +6,8 @@ import { Header } from "@/components/layout/header"
 import Link from "next/link"
 import {
   Eye, Brush, SmilePlus, Ear, Footprints, Activity,
-  Plus, ChevronRight, Heart, MessageCircle, BookOpen, Users, AlertCircle
+  Plus, ChevronRight, Heart, MessageCircle, BookOpen, Users, AlertCircle,
+  Hospital, UtensilsCrossed, ShieldAlert
 } from "lucide-react"
 
 interface Pet {
@@ -58,37 +59,21 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* AI Chatbot Banner */}
-        <Link
-          href="/chat"
-          className="flex items-center gap-4 bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow border border-emerald-100"
-        >
-          <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
-            <MessageCircle className="w-6 h-6 text-emerald-600" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-gray-900">AI 수의사 상담</p>
-            <p className="text-xs text-gray-500 mt-0.5">증상을 말하면 AI가 원인과 대처법을 알려드려요</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-gray-300" />
-        </Link>
-
         {/* Quick Links */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/breed-guide" className="flex items-center gap-3 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-2 bg-purple-50 rounded-lg"><BookOpen className="w-5 h-5 text-purple-500" /></div>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">품종 가이드</p>
-              <p className="text-[10px] text-gray-400">맞춤 건강 정보</p>
-            </div>
-          </Link>
-          <Link href="/community" className="flex items-center gap-3 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-2 bg-blue-50 rounded-lg"><Users className="w-5 h-5 text-blue-500" /></div>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">커뮤니티</p>
-              <p className="text-[10px] text-gray-400">보호자 소통</p>
-            </div>
-          </Link>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { href: "/breed-guide", icon: BookOpen, label: "품종 가이드", color: "bg-purple-50 text-purple-500" },
+            { href: "/community", icon: Users, label: "커뮤니티", color: "bg-blue-50 text-blue-500" },
+            { href: "/vet", icon: Hospital, label: "동물병원", color: "bg-teal-50 text-teal-500" },
+            { href: "/nutrition", icon: UtensilsCrossed, label: "영양 분석", color: "bg-orange-50 text-orange-500" },
+            { href: "/emergency", icon: ShieldAlert, label: "응급 가이드", color: "bg-red-50 text-red-500" },
+            { href: "/chat", icon: MessageCircle, label: "AI 상담", color: "bg-emerald-50 text-emerald-500" },
+          ].map(item => (
+            <Link key={item.href} href={item.href} className="flex flex-col items-center gap-1.5 bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
+              <div className={`p-2 rounded-lg ${item.color}`}><item.icon className="w-4 h-4" /></div>
+              <span className="text-[10px] font-medium text-gray-700">{item.label}</span>
+            </Link>
+          ))}
         </div>
 
         {/* Quick Check Buttons */}
